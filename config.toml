@@ -1,25 +1,50 @@
+# ============================================================
+# Decision Bot — configurazione
+# Nessuna API key qui: le credenziali restano in revx (~/.config)
+# ============================================================
+
 [segnali]
+# Coppie da analizzare (devono essere anche in policy.allowlist)
 coppie = ["DOT-EUR", "ATOM-EUR", "ETH-EUR", "BTC-EUR"]
+
+# conservative = meno segnali, più stretti
+# precise     = bilanciato
+# balanced    = più segnali
 modalita = "conservative"
+
+# Timeframe veloce (ingresso)
 intervallo_veloce = "15m"
 storico_veloce = "5d"
+
+# Timeframe lento (filtro trend)
 intervallo_lento = "1h"
 storico_lento = "20d"
 
 [capitale]
+# Capitale di riferimento per sizing e paper
 eur = 100.0
+
+# Rischio massimo per singola operazione (% del capitale)
 rischio_per_trade_pct = 1.0
+
+# Una posizione non supera questa % del capitale
 max_posizione_pct = 50.0
 
 [policy]
+# Gate: se fallisce → BLOCKED, nessuna proposta/paper
 max_trade_notional = 150.0
 max_position_pct = 50.0
 max_risk_pct = 2.0
 min_rr_ratio = 1.2
 max_spread_bps = 50.0
 proposal_ttl_minutes = 15
+
+# true = blocca TUTTE le proposte (emergenza)
 kill_switch = false
+
+# Solo queste coppie possono passare il gate
 allowlist = ["BTC-EUR", "ETH-EUR", "DOT-EUR", "ATOM-EUR"]
 
 [revx]
+# Percorso CLI Revolut X sul PC o sul VPS
 percorso = "~/.local/bin/revx"
