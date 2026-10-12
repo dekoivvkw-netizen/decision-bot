@@ -1,0 +1,25 @@
+[segnali]
+coppie = ["DOT-EUR", "ATOM-EUR", "ETH-EUR", "BTC-EUR"]
+modalita = "conservative"
+intervallo_veloce = "15m"
+storico_veloce = "5d"
+intervallo_lento = "1h"
+storico_lento = "20d"
+
+[capitale]
+eur = 100.0
+rischio_per_trade_pct = 1.0
+max_posizione_pct = 50.0
+
+[policy]
+max_trade_notional = 150.0
+max_position_pct = 50.0
+max_risk_pct = 2.0
+min_rr_ratio = 1.2
+max_spread_bps = 50.0
+proposal_ttl_minutes = 15
+kill_switch = false
+allowlist = ["BTC-EUR", "ETH-EUR", "DOT-EUR", "ATOM-EUR"]
+
+[revx]
+percorso = "~/.local/bin/revx"
