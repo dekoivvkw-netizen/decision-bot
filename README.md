@@ -1,80 +1,57 @@
 # Decision Bot · Revolut X
 
-**Software reale** di trading decisionale: analizza il mercato, decide COMPRA/VENDI/NEUTRO, applica un gate di rischio e propone o registra in **paper trading**.
+**Software reale e pubblico** di trading decisionale.
 
 > Non è un consiglio finanziario. **Non piazza ordini reali in automatico.**
 
-## Link pubblico
+**https://github.com/dekoivvkw-netizen/decision-bot**
 
-https://github.com/dekoivvkw-netizen/decision-bot
-
-(Il repo `trading-bots` resta privato come archivio completo; questo è il pacchetto operativo pubblico.)
-
-## Cosa fa (vero)
-
-1. Legge candele da **Revolut X** (`revx`, sola lettura)
-2. Calcola EMA, RSI, ATR, **Bollinger**
-3. Decide con due percorsi:
-   - **Trend** (primario)
-   - **Mean-reversion Bollinger** (secondario)
-4. Filtra con **Policy Gate** (allowlist, max notional, rischio, R/R, kill switch)
-5. Esito: `PROPOSE` · `PAPER` · `SKIP` · `BLOCKED`
-6. **GUI** Streamlit con grafici e statistiche
-
-## Installazione (copia-incolla)
+## Installazione
 
 ```bash
 git clone https://github.com/dekoivvkw-netizen/decision-bot.git
 cd decision-bot
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Serve anche la CLI **revx** configurata per i dati live Revolut X.
+Serve la CLI **revx** per i dati live Revolut X.
 
-## Avvio
+## Comandi
+
+| Comando | Cosa fa |
+|---------|---------|
+| `python -m revolutx_bot decide` | Analizza e decide |
+| `python -m revolutx_bot decide --paper` | Decide + paper se gate OK |
+| `python -m revolutx_bot gui` | Dashboard grafici (localhost:8501) |
+| `python -m revolutx_bot stato` | Policy + paper + audit |
+| `python -m revolutx_bot segnali` | Solo segnali |
+| `bash AVVIA.sh` | Menu interattivo |
+
+Guide: [START.md](START.md) · [LOOP.md](LOOP.md)
+
+## Architettura
+
+```
+revx (lettura) → indicatori (EMA/RSI/ATR/BB)
+               → decide (trend | mean-reversion)
+               → policy gate
+               → PROPOSE | PAPER | SKIP | BLOCKED
+               → audit + GUI
+```
+
+## Test
 
 ```bash
-# Decisioni in terminale
-python -m revolutx_bot decide
-python -m revolutx_bot decide --paper
-
-# GUI (browser → http://localhost:8501)
-python -m revolutx_bot gui
-
-# Stato policy + paper + audit
-python -m revolutx_bot stato
+pip install pytest
+python -m pytest -q
 ```
-
-## Struttura
-
-```
-revolutx_bot/
-  decision_engine.py   # decide tutto
-  strategy.py          # trend + Bollinger MR
-  indicators.py        # EMA RSI ATR BB
-  policy.py            # gate rischio
-  paper.py             # ledger simulazione
-  gui.py               # dashboard grafici
-  cli.py               # comandi
-config.toml            # coppie, capitale, policy
-```
-
-## Configurazione
-
-Modifica `config.toml`:
-
-- `[segnali]` — coppie e modalità (`conservative` / `precise` / `balanced`)
-- `[capitale]` — EUR e rischio %
-- `[policy]` — kill_switch, max_trade_notional, allowlist
 
 ## Sicurezza
 
-- Nessuna chiave API nel codice
-- Kill switch in config
-- Fail-closed se dati o vincoli mancano
-- Paper e audit solo locali (`state/`, non in git)
-- Ordini reali solo a mano (comando `revx` stampato nella proposta)
+- Kill switch in `config.toml`
+- Allowlist coppie
+- Max notional / rischio / R/R
+- Ordini reali solo a mano via comando stampato
 
 **Prima il controllo, poi l'autonomia.**
