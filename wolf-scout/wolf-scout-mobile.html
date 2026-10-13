@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wolf Scout Mobile - Live</title>
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0D1117; color: #E6EDF3; padding: 15px; margin: 0; }
+    h1 { color: #F2C94C; font-size: 18px; text-align: center; margin-bottom: 4px; }
+    .sub { text-align: center; color: #8B949E; font-size: 12px; margin-bottom: 14px; }
+    .card { background: #161B22; border: 1px solid #30363D; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+    .btn { background: #238636; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+    .btn:active { background: #1a6b2b; }
+    .btn:disabled { opacity: 0.5; }
+    .btn-blue { background: #1f6feb; }
+    .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-row .btn { flex: 1; margin-top: 0; font-size: 12px; padding: 10px 4px; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .green { background: #00FF88; color: black; }
+    .yellow { background: #FFD93D; color: black; }
+    .stat { font-size: 13px; color: #8B949E; margin-top: 4px; }
+    .price { font-size: 17px; font-weight: bold; color: #F2C94C; }
+    .profit { font-size: 15px; color: #00FF88; font-weight: bold; }
+    .link-btn { display: block; text-align: center; background: #1f6feb; color: white; padding: 10px; border-radius: 4px; text-decoration: none; margin-top: 10px; font-weight: 600; }
+    input { width: 100%; padding: 10px; margin: 5px 0 10px; background: #0D1117; border: 1px solid #30363D; color: white; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+    label { font-size: 12px; color: #8B949E; }
+    .note { font-size: 11px; color: #8B949E; line-height: 1.4; margin-top: 10px; }
+    .err { color: #FF4D6D; font-size: 13px; padding: 10px; }
+    img.thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; background: #0D1117; }
+  </style>
+</head>
+<body>
+  <h1>🐺 Wolf Scout Live</h1>
+  <p class="sub">eBay reale via API · Fold7</p>
+
+  <div class="card">
+    <label>URL API (VPS) — senza / finale</label>
+    <input type="url" id="apiBase" placeholder="https://tuo-dominio.com oppure http://IP:8787" value="">
+
+    <label>Parola chiave</label>
+    <input type="text" id="keyword" value="borsetta pelle donna">
+
+    <label>Min € / Max €</label>
+    <div style="display:flex;gap:8px;">
+      <input type="number" id="minPrice" value="20" inputmode="decimal" style="margin:0">
+      <input type="number" id="maxPrice" value="80" inputmode="decimal" style="margin:0">
+    </div>
+
+    <button class="btn" id="btnLive" onclick="runLive()">CERCA LIVE (eBay API)</button>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="openEbay()">Solo link eBay</button>
+      <button class="btn btn-blue" onclick="openVinted()">Vinted</button>
+      <button class="btn btn-blue" onclick="openSubito()">Subito</button>
+    </div>
+    <p class="note">Salva l’URL API: resta in memoria su questo telefono. Serve <code>EBAY_APP_ID</code> sul VPS.</p>
+  </div>
+
+  <div id="resultsArea"></div>
+
+  <script>
+    const KEY_API = 'wolf_scout_api_base';
+    (function restore() {
+      const s = localStorage.getItem(KEY_API);
+      if (s) document.getElementById('apiBase').value = s;
+    })();
+
+    function q() {
+      const keyword = (document.getElementById('keyword').value || '').trim();
+      const minP = parseFloat(document.getElementById('minPrice').value) || 0;
+      const maxP = parseFloat(document.getElementById('maxPrice').value) || 9999;
+      return { keyword, minP, maxP, enc: encodeURIComponent(keyword) };
+    }
+
+    function ebayUrl() {
+      const { enc, minP, maxP } = q();
+      return `https://www.ebay.it/sch/i.html?_nkw=${enc}&_udlo=${minP}&_udhi=${maxP}&_sacat=0&rt=nc`;
+    }
+    function vintedUrl() {
+      const { enc, minP, maxP } = q();
+      return `https://www.vinted.it/catalog?search_text=${enc}&price_from=${minP}&price_to=${maxP}`;
+    }
+    function subitoUrl() {
+      const { enc, minP, maxP } = q();
+      return `https://www.subito.it/annunci-italia/vendita/usato/?q=${enc}&ps=${minP}&pe=${maxP}`;
+    }
+    function openEbay() { window.open(ebayUrl(), '_blank'); }
+    function openVinted() { window.open(vintedUrl(), '_blank'); }
+    function openSubito() { window.open(subitoUrl(), '_blank'); }
+
+    async function runLive() {
+      const base = (document.getElementById('apiBase').value || '').trim().replace(/\/$/, '');
+      const { keyword, minP, maxP } = q();
+      const area = document.getElementById('resultsArea');
+      const btn = document.getElementById('btnLive');
+      if (!base) {
+        area.innerHTML = '<div class="err">Inserisci l\u2019URL del VPS (es. http://IP:8787)</div>';
+        return;
+      }
+      if (!keyword) {
+        area.innerHTML = '<div class="err">Scrivi una parola chiave</div>';
+        return;
+      }
+      localStorage.setItem(KEY_API, base);
+      btn.disabled = true;
+      area.innerHTML = '<div class="card" style="text-align:center">\ud83d\udd0d Interrogo eBay\u2026</div>';
+      try {
+        const url = `${base}/api/scout?q=${encodeURIComponent(keyword)}&min=${minP}&max=${maxP}&limit=25`;
+        const r = await fetch(url);
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || r.statusText);
+        renderLive(data);
+      } catch (e) {
+        area.innerHTML = `<div class="err">Errore: ${e.message}<br><span class="note">Controlla API accesa e URL corretti.</span></div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function renderLive(data) {
+      const area = document.getElementById('resultsArea');
+      const deals = data.deals || [];
+      if (!deals.length) {
+        area.innerHTML = '<div class="card" style="text-align:center;color:#8B949E">Nessun deal sopra soglia.</div>';
+        return;
+      }
+      let html = `<div style="padding:8px;color:#F2C94C;font-weight:bold">${deals.length} deal \u00b7 ${data.source} \u00b7 \u201c${data.query}\u201d</div>`;
+      deals.forEach(d => {
+        const img = d.image ? `<img class="thumb" src="${d.image}" alt="">` : '';
+        html += `<div class="card">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            ${img}
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;justify-content:space-between;gap:6px;align-items:center">
+                <span style="font-weight:bold;font-size:14px">${escapeHtml(d.title)}</span>
+                <span class="tag ${d.status.toLowerCase()}">${d.status}</span>
+              </div>
+              <div class="stat">Prezzo: <span class="price">${d.price}\u20ac</span>${d.condition ? ' \u00b7 ' + escapeHtml(d.condition) : ''}</div>
+              <div class="stat">Rivendita stimata: ${d.estimated_resale}\u20ac</div>
+              <div class="stat">Profitto: <span class="profit">+${d.profit}\u20ac</span> (${d.margin_pct}%)</div>
+            </div>
+          </div>
+          <a class="link-btn" href="${d.url}" target="_blank" rel="noopener">Apri annuncio eBay</a>
+        </div>`;
+      });
+      area.innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+  </script>
+</body>
+</html>
